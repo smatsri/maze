@@ -87,7 +87,7 @@
   const CanvasView = (function() {
     const canvas = document.getElementById("stage");
     canvas.width = 800;
-    canvas.height = 1000;
+    
     ctx = canvas.getContext("2d");
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.strokeStyle = "white";
@@ -99,7 +99,9 @@
       B: "red"
     };
     const render = (data, path) => {
+      canvas.width = document.body.clientWidth * 0.91
       const w = canvas.width / data[0].length;
+      canvas.height = w * data.length;
 
       for (let i = 0; i < data.length; i++) {
         const row = data[i];
@@ -130,11 +132,6 @@
     const data = await Api.getRandom();
 
     const sol = Model.solve(data);
-    // for (let i = 1; i < sol.path.length; i++) {
-    //   const [a, b] = sol.path[i];
-    //   data[a][b] = "P";
-    // }
-
     CanvasView.render(data, sol.path);
   }
 
