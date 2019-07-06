@@ -1,8 +1,7 @@
-(function app(params) {
+(function maze() {
   const Api = (function api() {
     async function getRandom() {
       const res = await fetch(
-        //"api/1404.json"
         "https://api.noopschallenge.com/mazebot/random?mazSize=10"
       );
       const data = await res.json();
@@ -33,49 +32,23 @@
 
     const posEq = ([i1, j1], [i2, j2]) => i1 === i2 && j1 === j2;
 
-    x = 0;
-    const moveNext = state => {
-      while (true) {
-        x++;
-        state.maze[state.position[0]][state.position[1]] = false;
-        try {
-          const next = nextAvaliablePosition(state.maze, state.position);
-          if (!next) {
-            if (posEq(state.position, state.startPosition)) {
-              return { success: false };
-            }
-            state.position = state.prev.pop();
-          } else if (posEq(next, state.endPosition)) {
-            state.prev.push(state.position);
-            return { success: true, path: state.prev };
-          } else {
-            state.prev.push(state.position);
-            state.position = next;
+    const findPosition = (grid, value) => {
+      for (let i = 0; i < grid.length; i++) {
+        const row = grid[i];
+        for (let j = 0; j < row.length; j++) {
+          const col = row[j];
+          if (col === value) {
+            return [i, j];
           }
-        } catch (error) {
-          console.error(error);
-          console.log(state);
-          return null;
         }
       }
+
+      return [0, 0];
     };
 
     const solve = mazeData => {
       const maze = mazeData.map(r => r.map(c => c !== "X"));
 
-      const findPosition = (grid, value) => {
-        for (let i = 0; i < grid.length; i++) {
-          const row = grid[i];
-          for (let j = 0; j < row.length; j++) {
-            const col = row[j];
-            if (col === value) {
-              return [i, j];
-            }
-          }
-        }
-
-        return [0, 0];
-      };
       const startPosition = findPosition(mazeData, "A");
       const endPosition = findPosition(mazeData, "B");
 
@@ -87,7 +60,23 @@
         maze
       };
 
-      return moveNext(state);
+      while (true) {
+        state.maze[state.position[0]][state.position[1]] = false;
+        const next = nextAvaliablePosition(state.maze, state.position);
+        if (!next) {
+          if (posEq(state.position, state.startPosition)) {
+            return { success: false };
+          }
+          state.position = state.prev.pop();
+        } else if (posEq(next, state.endPosition)) {
+          state.prev.push(state.position);
+          state.prev.push(next);
+          return { success: true, path: state.prev };
+        } else {
+          state.prev.push(state.position);
+          state.position = next;
+        }
+      }
     };
 
     return {
@@ -95,72 +84,42 @@
     };
   })();
 
-  const ReactView = (function view() {
-    var e = React.createElement;
-
-    const cellClassNames = {
-      " ": "empty",
-      X: "wall",
-      A: "player",
-      B: "target",
-      P: "path"
-    };
-
-    const render = grid => {
-      let id = 0;
-      const items = [];
-      const gridE = e(
-        "div",
-        {
-          className: "maze",
-          style: { gridTemplateColumns: "repeat(" + grid.length + ", 1fr)" }
-        },
-        items
-      );
-      for (const row of grid) {
-        for (const cell of row) {
-          const className = cellClassNames[cell];
-          const item = e("div", { key: ++id, className });
-          items.push(item);
-        }
-      }
-
-      return gridE;
-    };
-    const root = document.getElementById("root");
-    return {
-      render: data => {
-        const x = ReactDOM.render(render(data), root);
-        console.log(x);
-      }
-    };
-  })();
-
   const CanvasView = (function() {
     const canvas = document.getElementById("stage");
-    canvas.width = 500;
+    canvas.width = 800;
     canvas.height = 1000;
     ctx = canvas.getContext("2d");
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.strokeStyle = "white";
 
     const styles = {
       " ": "white",
       X: "black",
       A: "green",
-      B: "red",
-      P: "blue"
+      B: "red"
     };
-    const render = data => {
+    const render = (data, path) => {
       const w = canvas.width / data[0].length;
-      console.log(w)
+
       for (let i = 0; i < data.length; i++) {
         const row = data[i];
         for (let j = 0; j < row.length; j++) {
           const col = row[j];
-          ctx.fillStyle = styles[col]
-          ctx.stroke();
-          ctx.fillRect(w*i,w*j,w,w)
+          ctx.fillStyle = styles[col];
+          ctx.fillRect(w * i, w * j, w, w);
         }
       }
+
+      ctx.beginPath();
+      ctx.moveTo(path[0][0] * w + w / 2, path[0][1] * w + w / 2);
+      console.log(path);
+      for (let i = 1; i < path.length; i++) {
+        const pos = path[i];
+        ctx.lineTo(pos[0] * w + w / 2, pos[1] * w + w / 2);
+      }
+      ctx.lineWidth = "3";
+      ctx.strokeStyle = "blue";
+      ctx.stroke();
     };
     return {
       render
@@ -170,18 +129,13 @@
   async function run() {
     const data = await Api.getRandom();
 
-    try {
-      const sol = Model.solve(data);
-      for (let i = 1; i < sol.path.length; i++) {
-        const [a, b] = sol.path[i];
-        data[a][b] = "P";
-      }
-    } catch (error) {
-      console.log(error);
-    }
+    const sol = Model.solve(data);
+    // for (let i = 1; i < sol.path.length; i++) {
+    //   const [a, b] = sol.path[i];
+    //   data[a][b] = "P";
+    // }
 
-    //ReactView.render(data);
-    CanvasView.render(data);
+    CanvasView.render(data, sol.path);
   }
 
   run();
