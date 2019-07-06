@@ -1,14 +1,29 @@
 (function maze() {
   const Api = (function api() {
     async function getRandom() {
-      const res = await fetch(
-        "https://api.noopschallenge.com/mazebot/random"
-      );
-      const data = await res.json();
-      return data.map;
+      let url = "https://api.noopschallenge.com/mazebot/random";
+      //url = "360.json";
+      const res = await fetch(url);
+      return await res.json();
     }
+
+    async function solve(mazePath, directions) {
+      const res = await fetch("https://api.noopschallenge.com" + mazePath, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          directions: directions
+        })
+      });
+
+      return await res.json();
+    }
+
     return {
-      getRandom
+      getRandom,
+      solve
     };
   })();
 
@@ -47,11 +62,9 @@
     };
 
     const solve = mazeData => {
-      const maze = mazeData.map(r => r.map(c => c !== "X"));
-
+      const maze = mazeData.map(r => r.map(c => (c !== "X" ? 1 : 0)));
       const startPosition = findPosition(mazeData, "A");
       const endPosition = findPosition(mazeData, "B");
-
       const state = {
         prev: [],
         startPosition,
@@ -61,7 +74,7 @@
       };
 
       while (true) {
-        state.maze[state.position[0]][state.position[1]] = false;
+        state.maze[state.position[0]][state.position[1]] = 0;
         const next = nextAvaliablePosition(state.maze, state.position);
         if (!next) {
           if (posEq(state.position, state.startPosition)) {
@@ -84,10 +97,10 @@
     };
   })();
 
-  const CanvasView = (function() {
+  const View = (function() {
     const canvas = document.getElementById("stage");
     canvas.width = 800;
-    
+
     ctx = canvas.getContext("2d");
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.strokeStyle = "white";
@@ -99,7 +112,7 @@
       B: "red"
     };
     const render = (data, path) => {
-      canvas.width = document.body.clientWidth * 0.91
+      canvas.width = document.body.clientWidth * 0.91;
       const w = canvas.width / data[0].length;
       canvas.height = w * data.length;
 
@@ -114,7 +127,6 @@
 
       ctx.beginPath();
       ctx.moveTo(path[0][0] * w + w / 2, path[0][1] * w + w / 2);
-      console.log(path);
       for (let i = 1; i < path.length; i++) {
         const pos = path[i];
         ctx.lineTo(pos[0] * w + w / 2, pos[1] * w + w / 2);
@@ -128,11 +140,33 @@
     };
   })();
 
+  const pathToDirections = path => {
+    let res = "";
+    let prev = path[0];
+    for (let i = 1; i < path.length; i++) {
+      const cur = path[i];
+      if (cur[0] > prev[0]) {
+        res += "S";
+      } else if (cur[0] < prev[0]) {
+        res += "N";
+      } else if (cur[1] > prev[1]) {
+        res += "E";
+      } else {
+        res += "W";
+      }
+      prev = cur;
+    }
+    return res;
+  };
   async function run() {
-    const data = await Api.getRandom();
+    const getRes = await Api.getRandom();
+    const map = getRes.map;
+    const sol = Model.solve(map);
+    const directions = pathToDirections(sol.path);
+    const solRes = await Api.solve(getRes.mazePath, directions);
+    console.log(solRes.message);
+    View.render(map, sol.path);
 
-    const sol = Model.solve(data);
-    CanvasView.render(data, sol.path);
   }
 
   run();

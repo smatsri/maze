@@ -1,0 +1,20 @@
+{
+  "name": "Maze #186 (10x10)",
+  "mazePath": "/mazebot/mazes/nLuE8wX5NUtncIQpCeUF65oJDiszMeGG6XmeJRkOuD0",
+  "startingPosition": [3, 5],
+  "endingPosition": [0, 7],
+  "message": "When you have figured out the solution, post it back to this url in JSON format. See the exampleSolution for more information.",
+  "exampleSolution": { "directions": "ENWNNENWNNS" },
+  "map": [
+    ["X", "X", "X", "X", "X", "X", "X", "X", "X", "X"],
+    [" ", " ", " ", "X", " ", "X", " ", " ", " ", "X"],
+    [" ", " ", " ", " ", " ", " ", " ", " ", " ", "X"],
+    ["X", " ", "X", "X", "X", "X", "X", " ", "X", "X"],
+    [" ", " ", "X", " ", "X", " ", "X", " ", " ", "X"],
+    [" ", " ", "X", "A", "X", " ", "X", " ", " ", " "],
+    ["X", " ", " ", " ", "X", " ", " ", " ", "X", " "],
+    ["B", "X", "X", "X", "X", "X", "X", "X", " ", " "],
+    [" ", "X", " ", " ", " ", " ", " ", "X", "X", " "],
+    [" ", " ", " ", "X", " ", "X", " ", " ", " ", " "]
+  ]
+}
