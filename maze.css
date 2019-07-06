@@ -1,0 +1,21 @@
+.maze {
+  display: grid;
+  width: 500px;
+  height: 500px;
+}
+.maze > div.wall {
+  background-color: black;
+}
+
+.maze > div.target {
+  background-color: red;
+}
+
+
+.maze > div.player {
+  background-color: green;
+}
+
+.maze > div.path {
+  background-color: yellow;
+}
