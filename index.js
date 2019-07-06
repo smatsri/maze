@@ -2,7 +2,7 @@
   const Api = (function api() {
     async function getRandom() {
       const res = await fetch(
-        "https://api.noopschallenge.com/mazebot/random?mazSize=10"
+        "https://api.noopschallenge.com/mazebot/random"
       );
       const data = await res.json();
       return data.map;
